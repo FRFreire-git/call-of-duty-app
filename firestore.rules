@@ -1,0 +1,80 @@
+// Regras de Segurança para Firestore
+// Cole estas regras no Firebase Console > Firestore Database > Regras
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regras para usuários
+    match /users/{userId} {
+      // Usuários podem ler e escrever apenas seus próprios dados
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Regras para atividades
+    match /atividades/{atividadeId} {
+      // Usuários podem ler e escrever apenas suas próprias atividades
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Usuários podem criar atividades para si mesmos
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Regras para estatísticas (opcional, para futuras implementações)
+    match /stats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Regras para notificações (opcional)
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow write: if false; // Apenas o servidor pode escrever notificações
+    }
+  }
+}
+
+/*
+INSTRUÇÕES PARA CONFIGURAR:
+
+1. Acesse o Firebase Console
+2. Vá para Firestore Database
+3. Clique na aba "Regras"
+4. Substitua o conteúdo pelas regras acima
+5. Clique em "Publicar"
+
+REGRAS DE STORAGE (Firebase Storage > Regras):
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Regras para fotos de perfil
+    match /profile_photos/{userId}_{timestamp} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == userId;
+    }
+    
+    // Regras para outros arquivos (opcional)
+    match /uploads/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == userId;
+    }
+  }
+}
+
+CONFIGURAÇÕES DE AUTHENTICATION:
+
+1. Vá para Authentication no Firebase Console
+2. Na aba "Sign-in method", habilite:
+   - Email/Password
+   - (Opcional) Google, Facebook, etc.
+
+3. Na aba "Users", você pode gerenciar usuários
+
+4. Na aba "Settings", configure:
+   - Nome do projeto
+   - Domínios autorizados
+   - Templates de email
+*/
